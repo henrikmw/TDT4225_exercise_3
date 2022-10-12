@@ -11,8 +11,8 @@ from tqdm.auto import tqdm
 
 import pickle
 
-class CollectionHandler:
 
+class CollectionHandler:
     def __init__(self):
         self.connection = DbConnector()
         self.client = self.connection.client
@@ -60,17 +60,18 @@ class CollectionHandler:
                                 for trackpoint in trackpoints_from_file:
                                     trackpoint_uuid = bson.objectid.ObjectId()
                                     trackpoint_ids.append(trackpoint_uuid)
+                                    trackpoint_split = trackpoint.split(",")
                                     self.trackpoints.append({
                                         "_id": trackpoint_uuid,
                                         "activity_id": activity_uuid,
                                         "user_id": user_id,
                                         "location": {
-                                            "lat": trackpoint[0],
-                                            "lon": trackpoint[1],
-                                            "alt": trackpoint[3]
+                                            "lat": trackpoint_split[0],
+                                            "lon": trackpoint_split[1],
+                                            "alt": trackpoint_split[3]
                                         },
-                                        "date_days": trackpoint[5],
-                                        "date_time": trackpoint[5] + " " + trackpoint[6],
+                                        "date_days": trackpoint_split[5],
+                                        "date_time": trackpoint_split[5] + " " + trackpoint_split[6].replace("\n", ""),
                                     })
 
                                 # Find start and end time from trackpoints
@@ -98,6 +99,7 @@ class CollectionHandler:
                                                     "trackpoints": trackpoint_ids
                                                 })
                                                 self.users[user_id]["activities"].append(activity_uuid)
+                                                break
                                 else:
                                     self.activities.append({
                                         "_id": activity_uuid,
@@ -128,11 +130,11 @@ def main():
     program = None
     try:
         preprocessor = Preprocessor()
-        preprocessor.drop_and_create_coll()
+        #preprocessor.drop_and_create_coll()
         collection_handler = CollectionHandler()
-        collection_handler.prepare_user_dict()
-        collection_handler.insert_data_locally()
-        collection_handler.insert_data_db()
+        #collection_handler.prepare_user_dict()
+        #collection_handler.insert_data_locally()
+        #collection_handler.insert_data_db()
     except Exception as e:
         print("ERROR: Failed to use database:", e)
     finally:
