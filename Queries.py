@@ -13,12 +13,25 @@ class Question:
         self.db = self.connection.db
 
     def task_one(self):
-        for table in ["User", "Activity", "Trackpoint"]:
+        print(f"\nTask 1")
+        for table in ["User"]:
+            dic = self.db[table].find_one()
+            count = 0
+            for key, value in dic.items():
+                try:
+                    if 0 < int(key) < 1000:
+                        count += 1
+                except:
+                    pass # id_ cannot be converted to int...
+            print(f"User has {count} documents")
+
+        for table in ["Activity", "Trackpoint"]:
             print("{table} has {count} documents".format(
                 table=table,
                 count=self.db[table].count_documents(filter={})))
 
     def task_two(self):
+        print(f"\nTask 2")
         for result in self.db["Activity"].aggregate([
             {
                 '$group': {
@@ -37,35 +50,35 @@ class Question:
                 }
             }
         ]):
-            print(f"{'user_id'}:")
-            print(f"Average activities: {result['avg_activities']}")
+            print(f"Average number of activities per user: {result['avg_activities']}")
 
     def task_three(self):
+        print(f"\nTask 3")
         print("Top 20 users with the highest number of activities:")
-        for user in self.db["User"].aggregate([
-            {
-                '$project': {
-                    '_id': '$user_id',
-                    'activity_count': {
-                        '$size': {
-                            '$if_null': [
-                                '$activities', []
-                            ]
-                        }
-                    }
-                }
-            }, {
-                '$sort': {
-                    'activity_count': -1
-                }
-            }, {
-                '$limit': 20
-            }
-        ]):
-            print(f"User: {user['_id']} Number of activities: {user['activity_count']}")
+
+        def second(elem):
+            return elem[1]
+
+        dic = self.db["User"].find_one()
+        top_users = []
+
+        for key, value in dic.items():
+            try:
+                if 0 < int(key) < 200:
+                    top_users.append((key, len(value['activities'])))
+            except:
+                pass
+        top_users.sort(key=second, reverse=True)
+        for i, top in enumerate(top_users[0:20]):
+            print("{number}. User {user_id}: {activities} activities".format(
+                number=i + 1,
+                user_id=top[0],
+                activities=top[1]
+            ))
 
     def task_four(self):
-        print("Users that have taken a taxi")
+        print(f"\nTask 4")
+        userlist = []
         for user in self.db["Activity"].aggregate([
             {
                 '$match': {
@@ -73,16 +86,20 @@ class Question:
                 }
             }
         ]):
-            print(f"User: {user['user_id']}")
+            if user['user_id'] not in userlist:
+                userlist.append(user['user_id'])
+        print(f"Users that have taken taxi:")
+        for user in userlist:
+            print(user)
 
 
 def main():
     question = Question()
 
     question.task_one()
-    # question.task_two()
-    # question.task_three()
-    # question.task_four()
+    question.task_two()
+    question.task_three()
+    question.task_four()
     # question.five()
     # question.six()
     # question.seven()
