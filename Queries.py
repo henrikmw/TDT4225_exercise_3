@@ -210,6 +210,41 @@ class Question:
 
         print(users)
 
+    def seven_fr(self):
+        print("\nTASK 8 \n \n")
+        users = self.db["User"]
+        user = list(users.find({"_id": "112"}))
+        print(user)
+        ac_list = user["activities"]
+        # Gets all the activities for user 112 with transportation mode walk
+        ac_list = list(filter(lambda ac: ac["transportation_mode"] == "walk", ac_list))
+        # Retrieves the activity ids
+        ac_ids = [ac["_id"] for ac in ac_list]
+        # Gets all the trackpoints for all the activities in the list
+        trackpoints = self.db["trackpoints"]
+        trackpoints = list(trackpoints.find({"activity_id": {"$in": ac_ids}}))
+
+        current_activity = None
+        total_distance = 0
+        part_distance = 0
+        for i in range(len(trackpoints) - 1):
+            # Extracts the locations for the current trackpoint and the next
+            # to calculate the distance further down
+            loc1 = trackpoints[i]["location"]["coordinates"]
+            loc2 = trackpoints[i+1]["location"]["coordinates"]
+            # Checks if we for the next iteration should reset the part-data
+            next_id = trackpoints[i+1]["activity_id"]
+            # If we are not on the same activity anymore, update the current_activity and
+            # add the calculated distance to the total
+            if(next_id != current_activity):
+                current_activity = next_id
+                total_distance += part_distance
+                part_distance = 0
+            # Adds the distance between the trackpoints to the part_distance
+            part_distance += haversine.haversine(loc1, loc2)
+
+        print("User 112 walked %s km in 2008" % (total_distance))
+
     def eight(self):
         for transportation in self.db["activities"].aggregate([
             {
@@ -228,6 +263,7 @@ class Question:
             }
         ]):
             print(f"{transportation['_id']} {transportation['distinct_users']} distinct users")
+
 
     def nine(self):
         # Task a
@@ -479,6 +515,7 @@ def main():
     # question.five()
     # question.six()
     # question.seven()
+    question.seven_fr()
     # question.eight()
     # question.nine()
     # question.ten()

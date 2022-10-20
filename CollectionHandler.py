@@ -113,7 +113,7 @@ class CollectionHandler:
 
     def insert_data_db(self):
         print("Insert users")
-        self.db["User"].insert_one(self.users)
+        self.db["User"].insert_many(list(self.users.values()))
         print("Insert activities")
         self.db["Activity"].insert_many(self.activities)
         print("Insert trackpoints")
